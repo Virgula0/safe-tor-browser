@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  tor-browser:
+    hostname: "Tor Browser"
+    build: .
+    container_name: tor-browser
+    ports:
+      # Bind strictly to the requested host IP and port
+      - "10.9.0.1:5800:5800"
+    environment:
+      - TZ=Europe/Rome 
+    security_opt:
+      - no-new-privileges:true
+    # Crucial: Web browsers heavily utilize shared memory. The Docker default (64MB) 
+    # will cause Tor to frequently crash. 1GB prevents this.
+    shm_size: "3g" 
+    restart: unless-stopped
