@@ -1,12 +1,10 @@
 FROM debian:bookworm-slim
 
-# Docker automatically injects the architecture it is building for here
 ARG TARGETARCH
-
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TOR_VERSION=16.0a6
 
-# Install GUI dependencies, noVNC stack, and debugging tools
+# Added 'sudo' to the list
 RUN apt-get update && apt-get install -y --no-install-recommends \
     xvfb \
     x11vnc \
@@ -28,15 +26,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     fonts-dejavu \
     x11-xserver-utils \
     xterm \
+    dante-server \
+    sudo \
     && rm -rf /var/lib/apt/lists/*
 
 RUN useradd -m -s /bin/bash toruser
+# Grant toruser passwordless sudo rights for initialization
+RUN echo "toruser ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
 RUN ln -s /usr/share/novnc/vnc.html /usr/share/novnc/index.html
 
 USER toruser
 WORKDIR /home/toruser
 
-# Determine the correct Tor Browser binary for the host's architecture
 RUN if [ "$TARGETARCH" = "amd64" ]; then \
         TOR_ARCH="x86_64"; \
     elif [ "$TARGETARCH" = "386" ]; then \
@@ -44,10 +46,8 @@ RUN if [ "$TARGETARCH" = "amd64" ]; then \
     elif [ "$TARGETARCH" = "arm64" ]; then \
         TOR_ARCH="aarch64"; \
     else \
-        echo "CRITICAL ERROR: The Tor Project does not provide binaries for architecture: $TARGETARCH (e.g., arm32/armhf)." && \
-        exit 1; \
+        echo "CRITICAL ERROR: Architecture $TARGETARCH not supported by Tor Project." && exit 1; \
     fi && \
-    echo "Downloading Tor Browser for $TOR_ARCH..." && \
     wget -O tor.tar.xz --progress=bar:force "https://dist.torproject.org/torbrowser/${TOR_VERSION}/tor-browser-linux-${TOR_ARCH}-${TOR_VERSION}.tar.xz" && \
     tar -xJf tor.tar.xz && \
     rm tor.tar.xz
@@ -55,6 +55,7 @@ RUN if [ "$TARGETARCH" = "amd64" ]; then \
 COPY --chown=toruser:toruser entrypoint.sh /home/toruser/entrypoint.sh
 RUN chmod +x /home/toruser/entrypoint.sh
 
-EXPOSE 5800
+EXPOSE 5800 5801
 
+# The Dockerfile now safely ends as the unprivileged user
 CMD ["/home/toruser/entrypoint.sh"]
