@@ -5,9 +5,10 @@ services:
     container_name: tor-browser
     ports:
       # Bind strictly to the requested host IP and port
-      - "127.0.0.1:5800:5800"
+      - "${HOST_ADDRESS:-127.0.0.1}:5800:5800"
     environment:
       - TZ=Europe/Rome
+      - VNC_PASSWORD  # Forwards it from host or .env file
     security_opt:
       - no-new-privileges:true
     # Crucial: Web browsers heavily utilize shared memory. The Docker default (64MB)
