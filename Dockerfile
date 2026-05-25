@@ -4,7 +4,6 @@ ARG TARGETARCH
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TOR_VERSION=16.0a6
 
-# Added 'sudo' to the list
 RUN apt-get update && apt-get install -y --no-install-recommends \
     xvfb \
     x11vnc \
@@ -26,14 +25,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     fonts-dejavu \
     x11-xserver-utils \
     xterm \
-    dante-server \
-    sudo \
+    python3 \
     && rm -rf /var/lib/apt/lists/*
 
 RUN useradd -m -s /bin/bash toruser
-# Grant toruser passwordless sudo rights for initialization
-RUN echo "toruser ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
-
 RUN ln -s /usr/share/novnc/vnc.html /usr/share/novnc/index.html
 
 USER toruser
@@ -52,10 +47,13 @@ RUN if [ "$TARGETARCH" = "amd64" ]; then \
     tar -xJf tor.tar.xz && \
     rm tor.tar.xz
 
+# Copy script directly into image layers without tracking volumes
+COPY --chown=toruser:toruser script/proxy_bridge.py /home/toruser/proxy_bridge.py
 COPY --chown=toruser:toruser entrypoint.sh /home/toruser/entrypoint.sh
 RUN chmod +x /home/toruser/entrypoint.sh
 
 EXPOSE 5800 5801
 
-# The Dockerfile now safely ends as the unprivileged user
+ENV PYTHONUNBUFFERED=1
+
 CMD ["/home/toruser/entrypoint.sh"]

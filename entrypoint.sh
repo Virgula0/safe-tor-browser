@@ -15,9 +15,6 @@ else
     echo "========================================================="
 fi
 
-# Synchronize system account password (Requires sudo)
-echo "toruser:$VNC_PASSWORD" | sudo chpasswd
-
 x11vnc -storepasswd "$VNC_PASSWORD" /home/toruser/.vnc/passwd >/dev/null 2>&1
 chmod 600 /home/toruser/.vnc/passwd
 
@@ -41,41 +38,12 @@ fluxbox >/dev/null 2>&1 &
 x11vnc -display $DISPLAY -rfbauth /home/toruser/.vnc/passwd -listen localhost -xkb -forever -shared >/dev/null 2>&1 &
 websockify --web=/usr/share/novnc/ 5800 localhost:5900 >/dev/null 2>&1 &
 
-# 4. Conditional SOCKS5 Proxy Bridge
+# 4. Conditional SOCKS5 Proxy Bridge using Native Python Core
 if [ "$EXPOSE_PROXY" = "true" ]; then
     echo "========================================================="
-    echo "🚀 EXPOSE_PROXY=true: Launching Authenticated Dante Server!"
+    echo "🚀 EXPOSE_PROXY=true: Launching Custom Python SOCKS5 Bridge!"
     echo "========================================================="
-
-    # Write config to a protected system directory (Requires sudo tee)
-    cat << 'EOF' | sudo tee /etc/danted.conf >/dev/null
-logoutput: stderr
-internal: 0.0.0.0 port = 5801
-external: 127.0.0.1
-clientmethod: none
-socksmethod: username
-
-user.privileged: root
-user.unprivileged: toruser
-
-client pass {
-    from: 0.0.0.0/0 to: 0.0.0.0/0
-    log: error
-}
-
-socks pass {
-    from: 0.0.0.0/0 to: 0.0.0.0/0
-    log: error
-}
-
-route {
-    from: 0.0.0.0/0 to: 0.0.0.0/0 via: 127.0.0.1 port = 9150
-    proxyprotocol: socks_v5
-}
-EOF
-
-    # Start Dante daemon (Requires sudo)
-    sudo danted -D &
+    python3 /home/toruser/proxy_bridge.py &
 else
     echo "========================================================="
     echo "🔒 EXPOSE_PROXY is not true. Port 5801 proxy is DISABLED."
