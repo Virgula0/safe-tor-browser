@@ -45,7 +45,7 @@ A port `5801` is also forwarded and allows the use of the `tor-browser` backend 
 Having `tor-browser` within the container connected to the Tor network, use it like:
 
 ```bash
-curl --socks5-hostname toruser:VNC_PASSWORD@127.0.0.1:5801 https://check.torproject.org/api/ip | jq
+curl -sS --socks5-hostname toruser:VNC_PASSWORD@127.0.0.1:5801 https://check.torproject.org/api/ip | jq
 
 {
   "IsTor": true,
