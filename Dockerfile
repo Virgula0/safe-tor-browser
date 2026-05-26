@@ -1,4 +1,4 @@
-FROM debian:bookworm-slim
+FROM debian:bookworm-slim@sha256:0104b334637a5f19aa9c983a91b54c89887c0984081f2068983107a6f6c21eeb
 
 ARG TARGETARCH
 ENV DEBIAN_FRONTEND=noninteractive
@@ -26,6 +26,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     x11-xserver-utils \
     xterm \
     python3 \
+    autocutsel \
     && rm -rf /var/lib/apt/lists/*
 
 RUN useradd -m -s /bin/bash toruser
@@ -34,20 +35,11 @@ RUN ln -s /usr/share/novnc/vnc.html /usr/share/novnc/index.html
 USER toruser
 WORKDIR /home/toruser
 
-RUN if [ "$TARGETARCH" = "amd64" ]; then \
-        TOR_ARCH="x86_64"; \
-    elif [ "$TARGETARCH" = "386" ]; then \
-        TOR_ARCH="i686"; \
-    elif [ "$TARGETARCH" = "arm64" ]; then \
-        TOR_ARCH="aarch64"; \
-    else \
-        echo "CRITICAL ERROR: Architecture $TARGETARCH not supported by Tor Project." && exit 1; \
-    fi && \
-    wget -O tor.tar.xz --progress=bar:force "https://dist.torproject.org/torbrowser/${TOR_VERSION}/tor-browser-linux-${TOR_ARCH}-${TOR_VERSION}.tar.xz" && \
-    tar -xJf tor.tar.xz && \
-    rm tor.tar.xz
+COPY --chown=toruser:toruser script/fetch_tor.sh /home/toruser/fetch_tor.sh
+RUN chmod +x /home/toruser/fetch_tor.sh && \
+    /home/toruser/fetch_tor.sh "$TARGETARCH" "$TOR_VERSION" && \
+    rm /home/toruser/fetch_tor.sh
 
-# Copy script directly into image layers without tracking volumes
 COPY --chown=toruser:toruser script/proxy_bridge.py /home/toruser/proxy_bridge.py
 COPY --chown=toruser:toruser entrypoint.sh /home/toruser/entrypoint.sh
 RUN chmod +x /home/toruser/entrypoint.sh

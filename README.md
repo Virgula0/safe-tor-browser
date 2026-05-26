@@ -1,6 +1,6 @@
 # Safe Tor Brower
 
-Run a Tor Browser instance within a containerised environment.
+Run a Tor Browser toghether with a SOCKS proxy instance within a containerised environment.
 
 # Run
 
