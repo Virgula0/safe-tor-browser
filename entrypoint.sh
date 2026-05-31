@@ -21,6 +21,11 @@ echo "Starting Xvfb..."
 Xvfb $DISPLAY -screen 0 $RESOLUTION -ac +extension RANDR &
 sleep 3
 
+if ! xsetroot -solid "#2b3d50" 2>/dev/null; then
+    echo "❌ ERROR: Xvfb failed to start. Check your configurations."
+    exit 1
+fi
+
 echo "Setting desktop background..."
 xsetroot -solid "#2b3d50" || true
 
@@ -49,7 +54,7 @@ EOF
 
 echo "Starting Fluxbox, x11vnc, and websockify..."
 fluxbox >/dev/null 2>&1 &
-x11vnc -display $DISPLAY -rfbauth /home/toruser/.vnc/passwd -listen localhost -xkb -forever -shared >/dev/null 2>&1 &
+x11vnc -display $DISPLAY -rfbauth /home/toruser/.vnc/passwd -xkb -forever -shared >/dev/null 2>&1 &
 websockify --web=/usr/share/novnc/ 5800 localhost:5900 >/dev/null 2>&1 &
 
 if [ "$EXPOSE_PROXY" = "true" ]; then

@@ -29,6 +29,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     autocutsel \
     && rm -rf /var/lib/apt/lists/*
 
+RUN mkdir -p /tmp/.X11-unix && chmod 1777 /tmp/.X11-unix
+
 RUN useradd -m -s /bin/bash toruser
 RUN ln -s /usr/share/novnc/vnc.html /usr/share/novnc/index.html
 
