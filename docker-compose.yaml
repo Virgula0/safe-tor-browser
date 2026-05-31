@@ -11,6 +11,7 @@ services:
       - TZ=Europe/Rome
       - VNC_PASSWORD  # Forwards it from host or .env file
       - EXPOSE_PROXY=${EXPOSE_PROXY:-true}
+      - SN_CERT=${SN_CERT:-localhost}
     # Web browsers heavily utilize shared memory. The Docker default (64MB)
     # will cause Tor to frequently crash. 1GB prevents this.
     shm_size: "3g"

@@ -21,7 +21,7 @@ docker compose up --build -d
 ```
 
 Visit `http://10.9.0.1:5800` on your browser.
-If you want to rescale the size of the window visit: `http://10.9.0.1:5800/?resize=scale`
+If you want to rescale the size of the window visit: `https://10.9.0.1:5800/?resize=scale&encrypt=1`
 
 ### Check logs
 
@@ -57,6 +57,7 @@ docker compose down
 - `HOST_ADDRESS` -> change listening host address, default is `127.0.0.1`
 - `VNC_PASSWORD` -> set custom password to access vnc. Default is randomly generated.
 - `EXPOSE_PROXY` -> by default is set to `true`. `SOCKS` proxy will be available on port `5801`
+- `SN_CERT` allowed SN for SSL certs, default value is `localhost`
 
 ## Advanced usages
 
@@ -80,3 +81,11 @@ curl -sS --socks5-hostname toruser:SOCKS_PASSWORD@127.0.0.1:5801 https://check.t
 ```
 
 Where `SOCKS_PASSWORD` is the same of `VNC_PASSWORD` if provided as env variable otherwise is another randomly generated password different from `VNC_PASSWORD` which can be seen from docker logs.
+
+## Encryption
+
+Container uses self-signed certificate to encrypt communication between `No-VNC` browser client and `websockify`. To use the encrypted channel you need to force `No-VNC` to us it by using `https` and `encrypt=1`:
+
+```
+https://localhost:5800/?resize=scale&encrypt=1
+```

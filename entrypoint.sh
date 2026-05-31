@@ -2,6 +2,16 @@
 export DISPLAY=:99
 export RESOLUTION=1920x1200x24
 
+CERT_PATH="/home/toruser/novnc.pem"
+if [ ! -f "$CERT_PATH" ]; then
+    echo "==================================================================="
+    echo "🔒 Generating internal self-signed SSL certificate with SN=$SN_CERT"
+    echo "==================================================================="
+    openssl req -x509 -nodes -days 1200 -newkey rsa:2048 \
+      -keyout "$CERT_PATH" -out "$CERT_PATH" \
+      -subj "/CN=$SN_CERT" >/dev/null 2>&1
+fi
+
 mkdir -p /home/toruser/.vnc
 if [ -z "$VNC_PASSWORD" ]; then
     VNC_PASSWORD=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 12)
@@ -21,13 +31,11 @@ echo "Starting Xvfb..."
 Xvfb $DISPLAY -screen 0 $RESOLUTION -ac +extension RANDR &
 sleep 3
 
+echo "Setting desktop background..."
 if ! xsetroot -solid "#2b3d50" 2>/dev/null; then
-    echo "❌ ERROR: Xvfb failed to start. Check your configurations."
+    echo "❌ ERROR: Xvfb failed to start correctly. Aborting."
     exit 1
 fi
-
-echo "Setting desktop background..."
-xsetroot -solid "#2b3d50" || true
 
 echo "Starting clipboard synchronization..."
 autocutsel -s PRIMARY >/dev/null 2>&1 &
@@ -52,10 +60,12 @@ cat << 'EOF' > /home/toruser/.fluxbox/menu
 [end]
 EOF
 
-echo "Starting Fluxbox, x11vnc, and websockify..."
+echo "Starting Fluxbox, x11vnc, and encrypted websockify..."
 fluxbox >/dev/null 2>&1 &
+
 x11vnc -display $DISPLAY -rfbauth /home/toruser/.vnc/passwd -xkb -forever -shared >/dev/null 2>&1 &
-websockify --web=/usr/share/novnc/ 5800 localhost:5900 >/dev/null 2>&1 &
+
+websockify --web=/usr/share/novnc/ --cert="$CERT_PATH" 5800 localhost:5900 >/dev/null 2>&1 &
 
 if [ "$EXPOSE_PROXY" = "true" ]; then
     echo "========================================================="
