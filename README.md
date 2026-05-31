@@ -20,8 +20,8 @@ alternatively
 docker compose up --build -d
 ```
 
-Visit `http://10.9.0.1:5800` on your browser.
-If you want to rescale the size of the window visit: `https://10.9.0.1:5800/?resize=scale&encrypt=1`
+Visit `https://localhost:5800?encrypt=1` on your browser. See [Encryption](#encryption) for encryption details.
+If you want to rescale the size of the window visit: `https://localhost:5800/?resize=scale&encrypt=1`
 
 ### Check logs
 
@@ -84,8 +84,8 @@ Where `SOCKS_PASSWORD` is the same of `VNC_PASSWORD` if provided as env variable
 
 ## Encryption
 
-Container uses self-signed certificate to encrypt communication between `No-VNC` browser client and `websockify`. To use the encrypted channel you need to force `No-VNC` to us it by using `https` and `encrypt=1`:
+Container uses self-signed certificate to encrypt communication between `No-VNC` browser client and `websockify`. To use the encrypted channel you need to force `No-VNC` to use it by using `https` and `encrypt=1`:
 
 ```
-https://localhost:5800/?resize=scale&encrypt=1
+https://localhost:5800/?encrypt=1
 ```
